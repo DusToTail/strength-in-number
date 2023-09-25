@@ -39,10 +39,10 @@ namespace StrengthInNumber
         {
             _array[ToIndex(position)] = value;
         }
-
-        public int ToIndex(int2 position)
+        public int ToIndex(int2 position) => ToIndex(position.x, position.y);
+        public int ToIndex(int x, int y)
         {
-            return position.y * Settings.xCount + position.x;
+            return y * Settings.xCount + x;
         }
         public int2 ToPosition(int index)
         {

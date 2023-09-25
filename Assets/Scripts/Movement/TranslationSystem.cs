@@ -48,10 +48,8 @@ namespace StrengthInNumber.Movement
         }
     }
 
-    [BurstCompile]
     public static class TranslationUtils
     {
-        [BurstCompile]
         public static float3 ClampMax(float3 delta, float max)
         {
             return math.lengthsq(delta) > max * max ?

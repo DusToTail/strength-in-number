@@ -3,16 +3,16 @@ using Unity.Mathematics;
 
 namespace StrengthInNumber.GridPlatform
 {
-    public class Platform
+    public class PlatformManaged
     {
         public PlatformSettingsSO Settings { get; private set; }
 
-        public Grid2D<float2> Positions { get; private set; }
+        public Grid2DManaged<float2> Positions { get; private set; }
 
-        public Platform(PlatformSettingsSO settings)
+        public PlatformManaged(PlatformSettingsSO settings)
         {
             Settings = settings;
-            Positions = new Grid2D<float2>(Settings.grid);
+            Positions = new Grid2DManaged<float2>(Settings.grid);
 
             float2 offset = float2.zero;
             if(Settings.cell.pivot == PivotPoint.Center)

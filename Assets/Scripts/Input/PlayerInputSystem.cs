@@ -62,7 +62,7 @@ namespace StrengthInNumber
 
             SystemAPI.SetComponentEnabled<PlayerSelect>(_player, true);
 
-            Debug.Log("Select");
+            Debug.Log("Select triggered");
         }
         private void OnPlayerDeselect(InputAction.CallbackContext obj)
         {
@@ -73,7 +73,7 @@ namespace StrengthInNumber
 
             SystemAPI.SetComponentEnabled<PlayerDeselect>(_player, true);
 
-            Debug.Log("Deselect");
+            Debug.Log("Deselect triggered");
         }
     }
 }

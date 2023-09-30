@@ -44,20 +44,20 @@ namespace StrengthInNumber
             var filter = castData.ValueRO.filter;
             var hit = Raycast(start, end, filter);
 
+            Color color = Color.red;
             if(hit != Entity.Null)
             {
-                Debug.DrawLine(start, end, Color.yellow);
+                if (EntityManager.HasComponent<SelectableTag>(hit))
+                {
+                    color = Color.green;
+                }
+                else
+                {
+                    color = Color.yellow;
+                }
             }
-            else
-            {
-                Debug.DrawLine(start, end, Color.red);
-            }
-
-            if(EntityManager.HasComponent<SelectableTag>(hit))
-            {
-                castData.ValueRW.hit = hit;
-                Debug.DrawLine(start, end, Color.green);
-            }
+            Debug.DrawLine(start, end, color);
+            castData.ValueRW.hit = hit;
         }
 
         public Entity Raycast(float3 from, float3 to, CollisionFilter filter)

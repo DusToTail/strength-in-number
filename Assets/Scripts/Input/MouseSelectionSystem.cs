@@ -1,6 +1,6 @@
 using Unity.Entities;
+using Unity.Burst;
 using Unity.Collections;
-using UnityEngine;
 
 namespace StrengthInNumber
 {
@@ -11,28 +11,39 @@ namespace StrengthInNumber
         private Entity _player;
         private Entity _mouseRaycast;
 
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PlayerTag>();
             state.RequireForUpdate<MouseRaycastData>();
         }
+        [BurstCompile]
         public void OnDestroy(ref SystemState state)
         {
         }
+        [BurstCompile]
         public void OnStartRunning(ref SystemState state)
         {
-            EntityQuery playerQuery = state.GetEntityQuery(typeof(PlayerTag));
+            EntityQueryBuilder playerBuilder = new EntityQueryBuilder(Allocator.Temp).WithAll<PlayerTag>();
+            EntityQuery playerQuery = playerBuilder.Build(state.WorldUnmanaged.EntityManager);
             _player = playerQuery.GetSingletonEntity();
+            playerBuilder.Dispose();
+            playerQuery.Dispose();
 
-            EntityQuery mouseRaycastQuery = state.GetEntityQuery(typeof(MouseRaycastData));
+            EntityQueryBuilder mouseRaycastBuilder = new EntityQueryBuilder(Allocator.Temp).WithAll<MouseRaycastData>();
+            EntityQuery mouseRaycastQuery = mouseRaycastBuilder.Build(state.WorldUnmanaged.EntityManager);
             _mouseRaycast = mouseRaycastQuery.GetSingletonEntity();
+            mouseRaycastBuilder.Dispose();
+            mouseRaycastQuery.Dispose();
         }
+        [BurstCompile]
         public void OnStopRunning(ref SystemState state)
         {
             _player = Entity.Null;
 
             _mouseRaycast = Entity.Null;
         }
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var em = state.WorldUnmanaged.EntityManager;
@@ -51,7 +62,6 @@ namespace StrengthInNumber
                     foreach (var entity in entities)
                     {
                         em.RemoveComponent<SelectedTag>(entity);
-                        Debug.Log($"Deselect {em.GetName(entity)}");
                     }
                     entities.Dispose();
                 }
@@ -64,7 +74,6 @@ namespace StrengthInNumber
                     !em.HasComponent<SelectedTag>(hoverEntity))
                 {
                     em.AddComponent<SelectedTag>(hoverEntity);
-                    Debug.Log($"Select {em.GetName(hoverEntity)}");
                 }
             }
 
@@ -76,7 +85,6 @@ namespace StrengthInNumber
                     foreach(var entity in entities)
                     {
                         em.RemoveComponent<SelectedTag>(entity);
-                        Debug.Log($"Deselect {em.GetName(entity)}");
                     }
                     entities.Dispose();
                 }

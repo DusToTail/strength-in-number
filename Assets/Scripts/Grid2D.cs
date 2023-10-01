@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace StrengthInNumber
 {
+    [Serializable]
     public struct Grid2DUnmanaged<T> : IDisposable where T : unmanaged
     {
         public int xCount;
@@ -93,14 +94,5 @@ namespace StrengthInNumber
         {
             _array.Dispose();
         }
-    }
-
-
-    [CreateAssetMenu(fileName = "Grid2DSettings", menuName = "Custom/Grid2DSettings")]
-    [Serializable]
-    public class Grid2DSettingsSO : ScriptableObject
-    {
-        public int xCount;
-        public int yCount;
     }
 }

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace StrengthInNumber.GridPlatform
 {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(MouseRaycastSystem))]
+    [UpdateAfter(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(PlatformCleanupSystem))]
     public partial struct PlatformDebugSystem : ISystem
     {

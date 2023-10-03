@@ -1,30 +1,16 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Physics;
-using System;
+
+using Utils = StrengthInNumber.RaycastUtils;
 
 namespace StrengthInNumber
 {
-    [Flags]
-    public enum CollisionLayers
-    {
-        Nothing = 0,
-        Selection = 1,
-        Ground = 1 << 1,
-        Object = 1 << 2
-    }
-
     public class MouseRaycastAuthoring : MonoBehaviour
     {
         public float castDistance = 100f;
         public CollisionLayers belongsTo;
         public CollisionLayers collidesWith;
-
-        public static readonly CollisionLayers AllCollisionLayers = 
-            CollisionLayers.Nothing |
-            CollisionLayers.Selection |
-            CollisionLayers.Ground |
-            CollisionLayers.Object;
 
         public class MouseRaycastBaker : Baker<MouseRaycastAuthoring>
         {
@@ -32,13 +18,13 @@ namespace StrengthInNumber
             {
                 var self = GetEntity(TransformUsageFlags.None);
 
-                AddComponent(self, new MouseRaycastData()
+                AddComponent(self, new MouseRaycast()
                 {
                     castDistance = authoring.castDistance,
                     filter = new CollisionFilter
                     {
-                        BelongsTo = (uint) (authoring.belongsTo & AllCollisionLayers),
-                        CollidesWith = (uint) (authoring.collidesWith & AllCollisionLayers),
+                        BelongsTo = Utils.ToUInt(authoring.belongsTo),
+                        CollidesWith = Utils.ToUInt(authoring.collidesWith),
                         GroupIndex = 0
                     },
                     hit = Entity.Null
@@ -47,7 +33,7 @@ namespace StrengthInNumber
         }
     }
 
-    public struct MouseRaycastData : IComponentData
+    public struct MouseRaycast : IComponentData, IEnableableComponent
     {
         public float castDistance;
         public CollisionFilter filter;

@@ -12,6 +12,8 @@ namespace StrengthInNumber
                 var self = GetEntity(TransformUsageFlags.WorldSpace);
 
                 AddComponent(self, new SelectableTag());
+                AddComponent(self, new SelectedFlag());
+                SetComponentEnabled<SelectedFlag>(self, false);
             }
         }
     }
@@ -19,7 +21,7 @@ namespace StrengthInNumber
     public struct SelectableTag : IComponentData
     {
     }
-    public struct SelectedTag : IComponentData
+    public struct SelectedFlag : IComponentData, IEnableableComponent
     {
     }
 }

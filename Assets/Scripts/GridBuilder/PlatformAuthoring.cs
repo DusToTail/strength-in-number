@@ -3,7 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Collections;
 
-namespace StrengthInNumber.GridPlatform
+namespace StrengthInNumber.GridBuilder
 {
     public enum PivotPoint
     {

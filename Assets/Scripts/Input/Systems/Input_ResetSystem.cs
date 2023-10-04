@@ -6,28 +6,23 @@ using Unity.Burst;
 namespace StrengthInNumber
 {
     [UpdateInGroup(typeof(Input_Reset_SystemGroup))]
-    public partial struct GridBuilder_ResetInputSystem : ISystem, ISystemStartStop
+    public partial struct Input_ResetSystem : ISystem, ISystemStartStop
     {
         private EntityQuery _inputQuery;
         private Entity _input;
-        private EntityQuery _builderQuery;
-        private Entity _builder;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            GridBuilderUtils.GetInputQuery(state.EntityManager, out _inputQuery);
-            GridBuilderUtils.GetBuilderQuery(state.EntityManager, out _builderQuery);
+            InputUtils.GetInputQuery(state.EntityManager, out _inputQuery);
 
             state.RequireForUpdate(_inputQuery);
-            state.RequireForUpdate(_builderQuery);
         }
 
         [BurstCompile]
         public void OnDestroy(ref SystemState state)
         {
             _inputQuery.Dispose();
-            _builderQuery.Dispose();
         }
 
         [BurstCompile]
@@ -37,15 +32,12 @@ namespace StrengthInNumber
             var arr = _inputQuery.ToEntityArray(Allocator.Temp);
             _input = arr[0];
             arr.Dispose();
-
-            _builder = _builderQuery.GetSingletonEntity();
         }
 
         [BurstCompile]
         public void OnStopRunning(ref SystemState state)
         {
             _input = Entity.Null;
-            _builder = Entity.Null;
         }
 
         [BurstCompile]

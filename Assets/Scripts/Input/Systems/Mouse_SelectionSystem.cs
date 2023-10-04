@@ -1,12 +1,13 @@
 using Unity.Entities;
 using Unity.Burst;
 using Unity.Collections;
+using UnityEngine;
 
 namespace StrengthInNumber
 {
-    [UpdateInGroup(typeof(Physics_QueryBefore_SystemGroup))]
-    [UpdateAfter(typeof(MouseRaycastSystem))]
-    public partial struct MouseSelectionSystem : ISystem, ISystemStartStop
+    [UpdateInGroup(typeof(Physics_QueryAfter_SystemGroup))]
+    [UpdateAfter(typeof(Mouse_RaycastSystem))]
+    public partial struct Mouse_SelectionSystem : ISystem, ISystemStartStop
     {
         private EntityQuery _raycastQuery;
         private EntityQuery _mouseQuery;
@@ -54,9 +55,11 @@ namespace StrengthInNumber
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var em = state.EntityManager;
-            bool selectTriggered = em.GetComponentData<Input_Mouse_Select>(_mouse).triggered;
-            bool deselectTriggered = em.GetComponentData<Input_Mouse_Deselect>(_mouse).triggered;
+            var em = state.WorldUnmanaged.EntityManager;
+            var select = em.GetComponentData<Input_Mouse_Select>(_mouse);
+            var deselect = em.GetComponentData<Input_Mouse_Deselect>(_mouse);
+            bool selectTriggered = select.triggered;
+            bool deselectTriggered = deselect.triggered;
 
             EntityQueryBuilder builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<SelectedFlag>();
@@ -71,11 +74,17 @@ namespace StrengthInNumber
                 var mouseRaycastData = em.GetComponentData<MouseRaycast>(_raycast);
                 var hoverred = mouseRaycastData.hit;
                 TrySelect(em, hoverred);
+
+                // Consume the trigger
+                select.triggered = false;
             }
 
             if(deselectTriggered)
             {
                 TryDeselect(em, selectedQuery);
+
+                // Consume the trigger
+                deselect.triggered = false;
             }
 
             selectedQuery.Dispose();
@@ -89,6 +98,9 @@ namespace StrengthInNumber
                 foreach (var entity in entities)
                 {
                     em.SetComponentEnabled<SelectedFlag>(entity, false);
+                    FixedString64Bytes name;
+                    em.GetName(entity, out name);
+                    Debug.Log($"MouseSelection: Deselect {name}({entity.Index})");
                 }
                 entities.Dispose();
                 return true;
@@ -103,6 +115,9 @@ namespace StrengthInNumber
                 em.IsComponentEnabled<SelectedFlag>(entity) == false)
             {
                 em.SetComponentEnabled<SelectedFlag>(entity, true);
+                FixedString64Bytes name;
+                em.GetName(entity, out name);
+                Debug.Log($"MouseSelection: Select {name}({entity.Index})");
                 return true;
             }
             return false;

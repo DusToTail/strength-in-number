@@ -1,7 +1,7 @@
 using Unity.Entities;
 using UnityEngine;
 
-namespace StrengthInNumber
+namespace StrengthInNumber.GridBuilder
 {
     public class GridBuilderAuthoring : MonoBehaviour
     {

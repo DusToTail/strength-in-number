@@ -7,21 +7,17 @@ using UnityEngine.InputSystem;
 namespace StrengthInNumber
 {
     [UpdateInGroup(typeof(Input_Initialization_SystemGroup))]
-    public partial class GridBuilder_ReadInputSystem : SystemBase
+    public partial class Input_ReadSystem : SystemBase
     {
-        private GridBuilder_InputAction _actions;
+        private Input_InputAction _actions;
         private EntityQuery _inputQuery;
         private Entity _input;
-        private EntityQuery _builderQuery;
-        private Entity _builder;
 
         protected override void OnCreate()
         {
-            GridBuilderUtils.GetInputQuery(EntityManager, out _inputQuery);
-            GridBuilderUtils.GetBuilderQuery(EntityManager, out _builderQuery);
+            InputUtils.GetInputQuery(EntityManager, out _inputQuery);
 
             RequireForUpdate(_inputQuery);
-            RequireForUpdate(_builderQuery);
         }
 
         protected override void OnDestroy()
@@ -36,9 +32,7 @@ namespace StrengthInNumber
             _input = arr[0];
             arr.Dispose();
 
-            _builder = _builderQuery.GetSingletonEntity();
-
-            _actions = new GridBuilder_InputAction();
+            _actions = new Input_InputAction();
             _actions.GridBuilder.Enable();
 
             _actions.GridBuilder.MouseSelect.performed      += OnMouseSelect;
@@ -70,7 +64,6 @@ namespace StrengthInNumber
 
             EntityManager.DestroyEntity(_input);
             _input = Entity.Null;
-            _builder = Entity.Null;
         }
 
         protected override void OnUpdate()

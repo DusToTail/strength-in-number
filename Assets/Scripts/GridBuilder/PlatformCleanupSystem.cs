@@ -2,7 +2,7 @@ using Unity.Entities;
 using Unity.Burst;
 using Unity.Collections;
 
-namespace StrengthInNumber.GridPlatform
+namespace StrengthInNumber.GridBuilder
 {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     public partial struct PlatformCleanupSystem : ISystem, ISystemStartStop

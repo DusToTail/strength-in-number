@@ -5,7 +5,7 @@ using Unity.Jobs;
 using Unity.Burst;
 using UnityEngine;
 
-namespace StrengthInNumber.GridPlatform
+namespace StrengthInNumber.GridBuilder
 {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(FixedStepSimulationSystemGroup))]

@@ -1,7 +1,7 @@
 using UnityEngine;
 using Unity.Entities;
 
-namespace StrengthInNumber.GridPlatform
+namespace StrengthInNumber.GridBuilder
 {
     public class PlatformDebugAuthoring : MonoBehaviour
     {

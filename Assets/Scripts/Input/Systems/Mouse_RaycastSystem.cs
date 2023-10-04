@@ -9,8 +9,8 @@ using RaycastHit = Unity.Physics.RaycastHit;
 
 namespace StrengthInNumber
 {
-    [UpdateInGroup(typeof(Physics_QueryBefore_SystemGroup))]
-    public partial class MouseRaycastSystem : SystemBase
+    [UpdateInGroup(typeof(Physics_QueryAfter_SystemGroup))]
+    public partial class Mouse_RaycastSystem : SystemBase
     {
         private Camera _camera;
         private EntityQuery _raycastQuery;

@@ -8,11 +8,8 @@ namespace StrengthInNumber
     public partial class Physics_Initialization_SystemGroup : ComponentSystemGroup
     {
     }
-    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup), OrderFirst = true)]
-    public partial class Physics_QueryBefore_SystemGroup : ComponentSystemGroup
-    {
-    }
-    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup), OrderLast = true)]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateAfter(typeof(FixedStepSimulationSystemGroup))]
     public partial class Physics_QueryAfter_SystemGroup : ComponentSystemGroup
     {
     }

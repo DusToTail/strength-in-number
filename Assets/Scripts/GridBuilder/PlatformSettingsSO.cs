@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace StrengthInNumber.GridPlatform
+namespace StrengthInNumber.GridBuilder
 {
     [CreateAssetMenu(fileName = "PlatformSettings", menuName = "Custom/PlatformSettings")]
     public class PlatformSettingsSO : ScriptableObject

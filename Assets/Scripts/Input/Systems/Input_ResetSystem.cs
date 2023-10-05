@@ -37,6 +37,7 @@ namespace StrengthInNumber
         [BurstCompile]
         public void OnStopRunning(ref SystemState state)
         {
+            state.WorldUnmanaged.EntityManager.DestroyEntity(_input);
             _input = Entity.Null;
         }
 

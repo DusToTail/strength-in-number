@@ -5,11 +5,10 @@ namespace StrengthInNumber.GridBuilder
 {
     public static class GridBuilderUtils
     {
-        public static void GetBuilderQuery(EntityManager em, out EntityQuery query)
+        public static void GetQuery(EntityManager em, out EntityQuery query)
         {
             EntityQueryBuilder builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<Input_GridBuilder_Tag>();
-            // There will be more components here
+                .WithAll<GridBuilder_MainTag>();
             query = builder.Build(em);
             builder.Dispose();
         }

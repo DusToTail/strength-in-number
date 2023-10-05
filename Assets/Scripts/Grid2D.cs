@@ -1,16 +1,21 @@
 using System;
 using Unity.Collections;
-using Unity.Mathematics;
-using UnityEngine;
+using Unity.Jobs;
 
 namespace StrengthInNumber
 {
-    [Serializable]
-    public struct Grid2DUnmanaged<T> : IDisposable where T : unmanaged
+    public struct Grid2DUnmanaged<T> : IDisposable, IEquatable<Grid2DUnmanaged<T>>, INativeDisposable where T : unmanaged
     {
         public int xCount;
         public int yCount;
         public NativeArray<T> array;
+
+        public Grid2DUnmanaged(int xCount, int yCount, NativeArray<T> array)
+        {
+            this.xCount = xCount;
+            this.yCount = yCount;
+            this.array = array;
+        }
 
         public void Fill(T value)
         {
@@ -19,75 +24,97 @@ namespace StrengthInNumber
                 array[i] = value;
             }
         }
-        public void Fill(T value, int index)
+
+        public T this [int index]
         {
-            array[index] = value;
+            get
+            {
+                return array[index];
+            }
+            set
+            {
+                array[index] = value;
+            }
         }
-        public void Fill(T value, int2 position)
+        public T this[int x, int y]
         {
-            array[ToIndex(position)] = value;
+            get
+            {
+                return array[y * xCount + x];
+            }
+            set
+            {
+                array[y * xCount + x] = value;
+            }
         }
-        public int ToIndex(int2 position) => ToIndex(position.x, position.y);
-        public int ToIndex(int x, int y)
+
+        public JobHandle Dispose(JobHandle inputDeps)
         {
-            return y * xCount + x;
+            return array.Dispose(inputDeps);
         }
-        public int2 ToPosition(int index)
-        {
-            int y = index / xCount;
-            int x = index - y * xCount;
-            return new int2(x, y);
-        }
+
         public void Dispose()
         {
             array.Dispose();
+        }
+
+        public bool Equals(Grid2DUnmanaged<T> other)
+        {
+            if(xCount == other.yCount &&
+               yCount == other.yCount &&
+               array.Equals(other.array))
+            {
+                return true;
+            }
+            return false;
         }
     }
 
     public class Grid2DManaged<T> where T : unmanaged
     {
         public NativeArray<T>.ReadOnly ArrayRO { get { return _array.AsReadOnly(); } }
-        public Grid2DSettingsSO Settings { get; private set; }
+        public int XCount { get; private set; }
+        public int YCount { get; private set; }
 
         private NativeArray<T> _array;
 
-        public Grid2DManaged(Grid2DSettingsSO settings)
+        public Grid2DManaged(int xCount, int yCount)
         {
-            Settings = settings ?? new Grid2DSettingsSO()
-            {
-                xCount = 10,
-                yCount = 10,
-            };
-
-            int total = settings.xCount * settings.yCount;
+            this.XCount = xCount;
+            this.YCount = yCount;
+            int total = xCount * yCount;
             _array = new NativeArray<T>(total, Allocator.Persistent);
         }
 
         public void Fill(T value)
         {
-            for(int i = 0; i < ArrayRO.Length; i++)
+            for(int i = 0; i < _array.Length; i++)
             {
                 _array[i] = value;
             }
         }
-        public void Fill(T value, int index)
+
+        public T this[int index]
         {
-            _array[index] = value;
+            get
+            {
+                return _array[index];
+            }
+            set
+            {
+                _array[index] = value;
+            }
         }
-        public void Fill(T value, int2 position)
+        public T this[int x, int y]
         {
-            _array[ToIndex(position)] = value;
-        }
-        public int ToIndex(int2 position) => ToIndex(position.x, position.y);
-        public int ToIndex(int x, int y)
-        {
-            return y * Settings.xCount + x;
-        }
-        public int2 ToPosition(int index)
-        {
-            int y = index / Settings.xCount;
-            int x = index - y * Settings.xCount;
-            return new int2(x, y);
+            get
+            {
+                return _array[y * XCount + x];
+            }
+            set
+            {
+                _array[y * XCount + x] = value;
+            }
         }
 
         ~Grid2DManaged()

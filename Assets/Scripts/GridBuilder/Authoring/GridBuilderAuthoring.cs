@@ -38,7 +38,7 @@ namespace StrengthInNumber.GridBuilder
                 int yCount = authoring.yCount;
 
                 // Grid bottom left (0,0) is world origin
-                var cells = new NativeArray<GridBuilder_UnmanagedGrid.CellData>(xCount * yCount, Allocator.Persistent);
+                var cells = new NativeArray<GridBuilder_UnmanagedGrid.CellData>(xCount * yCount, Allocator.Temp);
                 float2 offset = new float2(cellWidth, cellHeight) / 2f;
                 for (int y = 0; y < yCount; y++)
                 {
@@ -59,6 +59,7 @@ namespace StrengthInNumber.GridBuilder
                     cellWidth = cellWidth,
                     cells = new Grid2DUnmanaged<GridBuilder_UnmanagedGrid.CellData>(xCount, yCount, cells)
                 });
+                cells.Dispose();
                 //TODO: more components
             }
         }

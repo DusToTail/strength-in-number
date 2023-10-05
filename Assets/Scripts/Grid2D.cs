@@ -14,7 +14,7 @@ namespace StrengthInNumber
         {
             this.xCount = xCount;
             this.yCount = yCount;
-            this.array = array;
+            this.array = new NativeArray<T>(array, Allocator.Persistent);
         }
 
         public void Fill(T value)
@@ -78,12 +78,12 @@ namespace StrengthInNumber
 
         private NativeArray<T> _array;
 
-        public Grid2DManaged(int xCount, int yCount)
+        public Grid2DManaged(int xCount, int yCount, NativeArray<T> array)
         {
             this.XCount = xCount;
             this.YCount = yCount;
             int total = xCount * yCount;
-            _array = new NativeArray<T>(total, Allocator.Persistent);
+            _array = new NativeArray<T>(array, Allocator.Persistent);
         }
 
         public void Fill(T value)

@@ -1,8 +1,6 @@
 using Unity.Entities;
 using Unity.Burst;
 
-using UnmanagedGrid = StrengthInNumber.GridBuilder.GridBuilder_UnmanagedGrid;
-
 namespace StrengthInNumber.GridBuilder
 {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
@@ -14,6 +12,9 @@ namespace StrengthInNumber.GridBuilder
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
+            // System is not necessary anymore
+            state.Enabled = false;
+
             GridBuilderUtils.GetQuery(state.WorldUnmanaged.EntityManager, out _query);
             state.RequireForUpdate(_query);
         }
@@ -27,8 +28,6 @@ namespace StrengthInNumber.GridBuilder
         [BurstCompile]
         public void OnStopRunning(ref SystemState state)
         {
-            var unmanagedGrid = state.EntityManager.GetComponentData<UnmanagedGrid>(_entity);
-            unmanagedGrid.Dispose(state.Dependency).Complete();
             state.WorldUnmanaged.EntityManager.DestroyEntity(_entity);
             _entity = Entity.Null;
         }

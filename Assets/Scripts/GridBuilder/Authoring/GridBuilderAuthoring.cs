@@ -2,7 +2,6 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
-using Unity.Jobs;
 
 namespace StrengthInNumber.GridBuilder
 {
@@ -24,7 +23,7 @@ namespace StrengthInNumber.GridBuilder
         {
             public override void Bake(GridBuilderAuthoring authoring)
             {
-                var self = GetEntity(TransformUsageFlags.WorldSpace);
+                var self = GetEntity(TransformUsageFlags.None);
 
                 AddComponent(self, typeof(GridBuilder_MainTag));
                 if (authoring.debug)
@@ -36,9 +35,17 @@ namespace StrengthInNumber.GridBuilder
                 float cellHeight = authoring.cellHeight;
                 int xCount = authoring.xCount;
                 int yCount = authoring.yCount;
+                int length = xCount * yCount;
+                AddSharedComponent(self, new GridBuilder_GridBufferSettings()
+                {
+                    cellWidth = cellWidth,
+                    cellHeight = cellHeight,
+                    gridWidth = xCount,
+                    gridHeight = yCount
+                });
 
                 // Grid bottom left (0,0) is world origin
-                var cells = new NativeArray<GridBuilder_UnmanagedGrid.CellData>(xCount * yCount, Allocator.Temp);
+                var cells = new NativeArray<GridBuilder_GridBufferElement>(length, Allocator.Temp);
                 float2 offset = new float2(cellWidth, cellHeight) / 2f;
                 for (int y = 0; y < yCount; y++)
                 {
@@ -47,82 +54,17 @@ namespace StrengthInNumber.GridBuilder
                         float xPosition = x * cellWidth;
                         float yPosition = y * cellHeight;
                         int index = y * xCount + x;
-                        cells[index] = new GridBuilder_UnmanagedGrid.CellData
+                        cells[index] = new GridBuilder_GridBufferElement
                         {
                             position = new float2(xPosition, yPosition) + offset
                         };
                     }
                 }
-                AddComponent(self, new GridBuilder_UnmanagedGrid
-                {
-                    cellHeight = cellHeight,
-                    cellWidth = cellWidth,
-                    cells = new Grid2DUnmanaged<GridBuilder_UnmanagedGrid.CellData>(xCount, yCount, cells)
-                });
+               var buffer = AddBuffer<GridBuilder_GridBufferElement>(self);
+                buffer.EnsureCapacity(length);
+                buffer.AddRange(cells);
                 cells.Dispose();
-                //TODO: more components
             }
-        }
-    }
-
-    [ChunkSerializable]
-    public struct GridBuilder_UnmanagedGrid : IComponentData, INativeDisposable
-    {
-        public float cellWidth;
-        public float cellHeight;
-
-        public Grid2DUnmanaged<CellData> cells;
-
-        public JobHandle Dispose(JobHandle inputDeps)
-        {
-            return cells.Dispose(inputDeps);
-        }
-
-        public void Dispose()
-        {
-            cells.Dispose();
-        }
-        public CellData this[int index]
-        {
-            get
-            {
-                return cells[index];
-            }
-            set
-            {
-                cells[index] = value;
-            }
-        }
-        public CellData this[int x, int y]
-        {
-            get
-            {
-                return cells[x,y];
-            }
-            set
-            {
-                cells[x,y] = value;
-            }
-        }
-        public int2 ToGridPosition(float2 worldPosition)
-        {
-            float xFloat = worldPosition.x / cellWidth;
-            float yFloat = worldPosition.y / cellHeight;
-
-            int xInt = math.clamp((int)xFloat, 0, cells.xCount - 1);
-            int yInt = math.clamp((int)yFloat, 0, cells.yCount - 1);
-
-            return new int2(xInt, yInt);
-        }
-        public int ToIndex(float2 worldPosition)
-        {
-            var gridPosition = ToGridPosition(worldPosition);
-            return gridPosition.y * cells.xCount + gridPosition.x;
-        }
-
-        public struct CellData
-        {
-            public float2 position;
         }
     }
     public struct GridBuilder_MainTag : IComponentData
@@ -130,5 +72,17 @@ namespace StrengthInNumber.GridBuilder
     }
     public struct GridBuilder_DebugTag : IComponentData
     {
+    }
+    public struct GridBuilder_GridBufferSettings : ISharedComponentData
+    {
+        public float cellWidth;
+        public float cellHeight;
+        public int gridWidth;
+        public int gridHeight;
+    }
+    [InternalBufferCapacity(100)]
+    public struct GridBuilder_GridBufferElement : IBufferElementData
+    {
+        public float2 position;
     }
 }

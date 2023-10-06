@@ -5,8 +5,8 @@ using Unity.Jobs;
 using Unity.Burst;
 using UnityEngine;
 
-using UnmanagedGrid = StrengthInNumber.GridBuilder.GridBuilder_UnmanagedGrid;
-using Cell = StrengthInNumber.GridBuilder.GridBuilder_UnmanagedGrid.CellData;
+using BufferElement = StrengthInNumber.GridBuilder.GridBuilder_GridBufferElement;
+using BufferSettings = StrengthInNumber.GridBuilder.GridBuilder_GridBufferSettings;
 
 namespace StrengthInNumber.GridBuilder
 {
@@ -16,12 +16,14 @@ namespace StrengthInNumber.GridBuilder
     public partial struct GridBuilder_GridDebugSystem : ISystem, ISystemStartStop
     {
         private EntityQuery _query;
+        private BufferLookup<BufferElement> _lookup;
         private Entity _entity;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             GridBuilderUtils.GetQuery(state.WorldUnmanaged.EntityManager, out _query);
+            GridBuilderUtils.GetBufferLookup(ref state, out _lookup, true);
             state.RequireForUpdate(_query);
             state.RequireForUpdate<GridBuilder_DebugTag>();
         }
@@ -29,17 +31,26 @@ namespace StrengthInNumber.GridBuilder
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var grid = state.WorldUnmanaged.EntityManager.GetComponentData<UnmanagedGrid>(_entity);
-
-            var dcj = new DrawCellJob()
+            _lookup.Update(ref state);
+            
+            if(_lookup.TryGetBuffer(_entity, out var buffer))
             {
-                cells = grid.cells.array,
-                cellWidth = grid.cellWidth,
-                cellHeight = grid.cellHeight,
-                color = Color.yellow
-            };
+                BufferSettings settings;
+                GridBuilderUtils.GetBufferSettings(state.EntityManager, _entity, out settings);
+                int length = settings.gridWidth * settings.gridHeight;
+                var arr = buffer.ToNativeArray(Allocator.TempJob);
+                var dcj = new DrawCellJob()
+                {
+                    array = arr.AsReadOnly(),
+                    cellWidth = settings.cellWidth,
+                    cellHeight = settings.cellHeight,
+                    color = Color.yellow
+                };
 
-            state.Dependency = dcj.Schedule(grid.cells.array.Length, 4, state.Dependency);
+                state.Dependency = dcj.Schedule(length, 4, state.Dependency);
+                state.CompleteDependency();
+                arr.Dispose();
+            }
         }
 
         [BurstCompile]
@@ -63,7 +74,7 @@ namespace StrengthInNumber.GridBuilder
         [BurstCompile]
         public struct DrawCellJob : IJobParallelFor
         {
-            [ReadOnly] public NativeArray<Cell> cells;
+            [ReadOnly] public NativeArray<BufferElement>.ReadOnly array;
             public float cellWidth;
             public float cellHeight;
             public Color color;
@@ -72,7 +83,7 @@ namespace StrengthInNumber.GridBuilder
             public void Execute(int index)
             {
                 // NOT PERFORMANT, SLOW!!!!
-                float2 position = cells[index].position;
+                float2 position = array[index].position;
                 float halfWidth = cellWidth / 2f;
                 float halfHeight = cellHeight / 2f;
                 float3 _00 = new float3(position.x - halfWidth, 0f, position.y - halfHeight);

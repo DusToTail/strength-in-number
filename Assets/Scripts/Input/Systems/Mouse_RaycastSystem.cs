@@ -66,12 +66,11 @@ namespace StrengthInNumber
             float3 start = ray.origin;
             float3 end = ray.GetPoint(raycastRW.ValueRO.castDistance);
             var filter = raycastRW.ValueRO.filter;
-            var hit = Raycast(start, end, filter);
 
             Color color = Color.red;
-            if(hit != Entity.Null)
+            if(Raycast(start, end, filter, ref raycastRW.ValueRW.hit))
             {
-                if (EntityManager.HasComponent<SelectableTag>(hit))
+                if (EntityManager.HasComponent<SelectableTag>(raycastRW.ValueRO.hit.Entity))
                 {
                     color = Color.green;
                 }
@@ -81,11 +80,9 @@ namespace StrengthInNumber
                 }
             }
             Debug.DrawLine(start, end, color);
-
-            raycastRW.ValueRW.hit = hit;
         }
 
-        public Entity Raycast(float3 from, float3 to, CollisionFilter filter, JobHandle dependency = default)
+        public bool Raycast(float3 from, float3 to, CollisionFilter filter, ref RaycastHit hit, JobHandle dependency = default)
         {
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
 
@@ -96,9 +93,12 @@ namespace StrengthInNumber
                 Filter = filter
             };
 
-            RaycastHit hit = new RaycastHit();
             RaycastUtils.SingleRayCast(world, input, ref hit, dependency);
-            return hit.Entity;
+            if(hit.Entity != Entity.Null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

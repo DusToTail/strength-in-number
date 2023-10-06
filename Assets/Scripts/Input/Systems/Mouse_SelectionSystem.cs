@@ -1,7 +1,7 @@
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Burst;
 using Unity.Collections;
-using UnityEngine;
 
 namespace StrengthInNumber
 {
@@ -53,6 +53,45 @@ namespace StrengthInNumber
         }
 
         [BurstCompile]
+        public struct HoverJob : IJobParallelFor
+        {
+            [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<Entity> entities;
+            [ReadOnly] public EntityManager em;
+            [ReadOnly] public Entity hoverred;
+
+            public void Execute(int index)
+            {
+                var e = entities[index];
+                em.SetComponentEnabled<HoverredFlag>(e, e == hoverred);
+            }
+        }
+
+        [BurstCompile]
+        public struct SelectJob : IJobParallelFor
+        {
+            [DeallocateOnJobCompletion][ReadOnly] public NativeArray<Entity> entities;
+            [ReadOnly] public EntityManager em;
+            [ReadOnly] public Entity hoverred;
+
+            public bool selectTriggered;
+            public bool deselectTriggered;
+
+            public void Execute(int index)
+            {
+                var e = entities[index];
+
+                if(deselectTriggered)
+                {
+                    em.SetComponentEnabled<SelectedFlag>(e, false);
+                }
+                if (selectTriggered)
+                {
+                    em.SetComponentEnabled<SelectedFlag>(e, e == hoverred);
+                }
+            }
+        }
+
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var em = state.WorldUnmanaged.EntityManager;
@@ -60,67 +99,53 @@ namespace StrengthInNumber
             var deselect = em.GetComponentData<Input_Mouse_Deselect>(_mouse);
             bool selectTriggered = select.triggered;
             bool deselectTriggered = deselect.triggered;
+            var mouseRaycastData = em.GetComponentData<MouseRaycast>(_raycast);
+            var hoverred = mouseRaycastData.hit;
+            
+            // Hover evaluation
+            EntityQueryBuilder hover = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<HoverredFlag>()
+                .WithOptions(EntityQueryOptions.IncludeDisabledEntities);
+            EntityQuery hoverQuery = hover.Build(em);
+            hover.Dispose();
 
-            EntityQueryBuilder builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<SelectedFlag>();
-            EntityQuery selectedQuery = builder.Build(em);
-            builder.Dispose();
-
-            if (selectTriggered)
+            var hoverredArr = hoverQuery.ToEntityArray(Allocator.TempJob);
+            new HoverJob()
             {
-                // TODO: Shift click and make into separate function and maybe into scheduled jobs.
-                TryDeselect(em, selectedQuery);
+                entities = hoverredArr,
+                em = em,
+                hoverred = hoverred.Entity
+            }.Schedule(hoverredArr.Length, 32, state.Dependency).Complete();
 
-                var mouseRaycastData = em.GetComponentData<MouseRaycast>(_raycast);
-                var hoverred = mouseRaycastData.hit;
-                TrySelect(em, hoverred);
+            // Selection evaluation
+            EntityQueryBuilder selectBuilder = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<SelectedFlag>()
+                .WithOptions(EntityQueryOptions.IncludeDisabledEntities); ;
+            EntityQuery selectQuery = selectBuilder.Build(em);
+            selectBuilder.Dispose();
 
-                // Consume the trigger
-                select.triggered = false;
-            }
-
-            if(deselectTriggered)
+            if (selectTriggered || deselectTriggered)
             {
-                TryDeselect(em, selectedQuery);
-
-                // Consume the trigger
-                deselect.triggered = false;
-            }
-
-            selectedQuery.Dispose();
-        }
-
-        private bool TryDeselect(EntityManager em, EntityQuery query)
-        {
-            if(!query.IsEmpty)
-            {
-                var entities = query.ToEntityArray(Allocator.Temp);
-                foreach (var entity in entities)
+                var selectArr = selectQuery.ToEntityArray(Allocator.TempJob);
+                new SelectJob()
                 {
-                    em.SetComponentEnabled<SelectedFlag>(entity, false);
-                    FixedString64Bytes name;
-                    em.GetName(entity, out name);
-                    Debug.Log($"MouseSelection: Deselect {name}({entity.Index})");
-                }
-                entities.Dispose();
-                return true;
+                    entities = selectArr,
+                    em = em,
+                    hoverred = hoverred.Entity,
+                    selectTriggered = selectTriggered,
+                    deselectTriggered = deselectTriggered
+                }.Schedule(selectArr.Length, 32, state.Dependency).Complete();
             }
-            return false;
-        }
 
-        private bool TrySelect(EntityManager em, Entity entity)
-        {
-            if (entity != Entity.Null &&
-                em.HasComponent<SelectableTag>(entity) == true &&
-                em.IsComponentEnabled<SelectedFlag>(entity) == false)
-            {
-                em.SetComponentEnabled<SelectedFlag>(entity, true);
-                FixedString64Bytes name;
-                em.GetName(entity, out name);
-                Debug.Log($"MouseSelection: Select {name}({entity.Index})");
-                return true;
-            }
-            return false;
+            // Consume trigger
+            if (selectTriggered)
+                select.triggered = false;
+            if (deselectTriggered)
+                deselect.triggered = false;
+            
+
+            selectQuery.Dispose();
+            hoverQuery.Dispose();
         }
     }
 }

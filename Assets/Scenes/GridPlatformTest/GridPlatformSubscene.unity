@@ -212,12 +212,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f67e663adc4d784c903f6cf03cbd323, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 10
-  gridHeight: 10
-  center: {x: 0, y: 0}
+  settings:
+    gridSize: {x: 10, y: 10}
+    center: {x: 0, y: 0}
+    cellSize: {x: 1, y: 1}
   groundCollider: {fileID: 1923042932}
-  cellWidth: 1
-  cellHeight: 1
   debug: 1
   drawGizmos: 1
 --- !u!4 &1417219333
@@ -266,6 +265,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ed5c71b79d9f4e4f825005a4ab92c11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  setSelectable: 1
+  setHoverable: 1
 --- !u!4 &1923042931
 Transform:
   m_ObjectHideFlags: 0

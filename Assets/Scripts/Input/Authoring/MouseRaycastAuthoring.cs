@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Physics;
 
 using Utils = StrengthInNumber.RaycastUtils;
+using RaycastHit = Unity.Physics.RaycastHit;
 
 namespace StrengthInNumber
 {
@@ -27,7 +28,7 @@ namespace StrengthInNumber
                         CollidesWith = Utils.ToUInt(authoring.collidesWith),
                         GroupIndex = 0
                     },
-                    hit = Entity.Null
+                    hit = default
                 });
             }
         }
@@ -37,6 +38,6 @@ namespace StrengthInNumber
     {
         public float castDistance;
         public CollisionFilter filter;
-        public Entity hit;
+        public RaycastHit hit;
     }
 }

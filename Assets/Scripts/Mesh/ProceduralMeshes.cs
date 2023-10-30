@@ -8,14 +8,8 @@ namespace StrengthInNumber.ProceduralMeshes
 {
     public static class ProceduralMeshes
     {
-        public static readonly Mesh Cube = new Mesh()
-        {
-            name = "Cube"
-        };
-        public static readonly Mesh Tetrahedron = new Mesh()
-        {
-            name = "Tetrahedron"
-        };
+        public static Mesh Cube;
+        public static Mesh Tetrahedron;
         public const string RelativePath = "Meshes/Primitives/";
 
         [MenuItem("Primitives/CreateAsset")]
@@ -36,11 +30,20 @@ namespace StrengthInNumber.ProceduralMeshes
                 Directory.CreateDirectory(absolutePath);
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             }
-            AssetDatabase.CreateAsset(mesh, "Assets/" + RelativePath + mesh.name + ".asset");
+            string path = "Assets/" + RelativePath + mesh.name + ".asset";
+            if (!string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(path, AssetPathToGUIDOptions.OnlyExistingAssets)))
+            {
+                AssetDatabase.DeleteAsset(path);
+            }
+            AssetDatabase.CreateAsset(mesh, path);
         }
 
         private static void CreateCube()
         {
+            Cube = new Mesh()
+            {
+                name = "Cube"
+            };
             Mesh.MeshDataArray meshDataArray = Mesh.AllocateWritableMeshData(1);
             Mesh.MeshData meshData = meshDataArray[0];
 
@@ -53,6 +56,10 @@ namespace StrengthInNumber.ProceduralMeshes
 
         private static void CreateTetrahedron()
         {
+            Tetrahedron = new Mesh()
+            {
+                name = "Tetrahedron"
+            };
             Mesh.MeshDataArray meshDataArray = Mesh.AllocateWritableMeshData(1);
             Mesh.MeshData meshData = meshDataArray[0];
 

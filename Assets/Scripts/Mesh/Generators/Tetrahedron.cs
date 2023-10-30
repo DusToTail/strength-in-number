@@ -19,42 +19,94 @@ namespace StrengthInNumber.ProceduralMeshes
             new Vector3(0f, sqrt(6) / 12, sqrt(3) / 6),
             new Vector3(1f, sqrt(6) / 3, sqrt(3) / 2));
 
-        public int VertexCount => 4;
+        public int VertexCount => 12;
 
         public int IndexCount => 12;
 
-        public int JobLength => 1;
+        public int JobLength => 4;
 
         public void Execute<S>(int i, S streams) where S : struct, IMeshStreams
         {
-            // this is only executed only once, thus will handle all vertices at once
-            var positions = new NativeArray<float3>(4, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-            positions[0] = new float3(-0.5f, -sqrt(6) / 12, -sqrt(3) / 6);
-            positions[1] = new float3( 0.5f, -sqrt(6) / 12, -sqrt(3) / 6);
-            positions[2] = new float3( 0.0f, -sqrt(6) / 12,  sqrt(3) / 3);
-            positions[3] = new float3( 0.0f,  sqrt(6) / 4 ,  0.0f);
-            var tangents = new NativeArray<float4>(4, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-            tangents[0] = new float4(1.0f, 0.0f, 0.0f, -1.0f);
-            tangents[1] = normalize(new float4(-0.5f, 0.0f,  sqrt(3) / 2, -1.0f));
-            tangents[2] = normalize(new float4(-0.5f, 0.0f, -sqrt(3) / 2, -1.0f));
-            tangents[3] = new float4(0.0f, 1.0f, 0.0f, -1.0f);
-
-            Vertex vertex = new Vertex();
-
-            for (int vi = 0; vi < 4; vi++)
+            int vi = i * 3;
+            int ti = i;
+            Sides side = GetSide(i);
+            Vertex vertex = new Vertex()
             {
-                vertex.position = positions[vi];
-                vertex.normal = normalize(positions[vi]);
-                vertex.tangent = tangents[vi];
-                streams.SetVertex(vi, vertex);
-            }
-            streams.SetTriangle(0, new int3(0, 1, 2));
-            streams.SetTriangle(1, new int3(0, 3, 1));
-            streams.SetTriangle(2, new int3(1, 3, 2));
-            streams.SetTriangle(3, new int3(2, 3, 0));
+                position = side.position,
+                normal = side.normal,
+                tangent = side.tangent,
+                texCoord0 = float2(0.0f)
+            };
+            float3 bitangent = normalize(cross(vertex.normal, vertex.tangent.xyz));
 
-            positions.Dispose();
-            tangents.Dispose();
+            streams.SetVertex(vi, vertex);
+
+
+            vertex.position += vertex.tangent.xyz;
+            vertex.texCoord0.x = 1.0f;
+            streams.SetVertex(vi + 1, vertex);
+
+            vertex.position += - bitangent * sqrt(3) / 2 - vertex.tangent.xyz / 2;
+            vertex.texCoord0.xy = new float2(0.5f, 1.0f);
+            streams.SetVertex(vi + 2, vertex);
+
+            streams.SetTriangle(ti, new int3(vi, vi + 2, vi + 1));
+        }
+
+        private struct Sides
+        {
+            public float3 position;
+            public float3 normal;
+            public float4 tangent;
+        }
+
+        private Sides GetSide(int i)
+        {
+            switch (i)
+            {
+                case 0:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(0.5f, -sqrt(6) / 12, -sqrt(3) / 6),
+                        normal = new float3(0.0f, -1.0f, 0.0f),
+                        tangent = new float4(-1.0f, 0.0f, 0.0f, -1.0f)
+                    };
+                }
+                case 1:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(-0.5f, -sqrt(6) / 12, -sqrt(3) / 6),
+                        normal = normalize(cross(
+                            new float3(0.0f, sqrt(6) / 4, 0.0f) - new float3(-0.5f, -sqrt(6) / 12, -sqrt(3) / 6),
+                            new float3(1.0f, 0.0f, 0.0f))),
+                        tangent = new float4(1.0f, 0.0f, 0.0f, -1.0f)
+                    };
+                    }
+                case 2:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(0.5f, -sqrt(6) / 12, -sqrt(3) / 6),
+                        normal = normalize(cross(
+                            new float3(0.0f, sqrt(6) / 4, 0.0f) - new float3(0.5f, -sqrt(6) / 12, -sqrt(3) / 6),
+                            new float3(-0.5f, 0.0f, sqrt(3) / 2))),
+                        tangent = new float4(normalize(new float3(-0.5f, 0.0f, sqrt(3) / 2)), -1.0f)
+                    };
+                }
+                default:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(0.0f, -sqrt(6) / 12, sqrt(3) / 3),
+                        normal = normalize(cross(
+                            new float3(0.0f, sqrt(6) / 4, 0.0f) - new float3(0.0f, -sqrt(6) / 12, sqrt(3) / 3),
+                            new float3(-0.5f, 0.0f, -sqrt(3) / 2))),
+                        tangent = new float4(normalize(new float3(-0.5f, 0.0f, -sqrt(3) / 2)), -1.0f)
+                    };
+                }
+            }
         }
     }
 }

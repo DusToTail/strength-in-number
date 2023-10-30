@@ -1,6 +1,5 @@
 using UnityEngine;
 using Unity.Mathematics;
-using Unity.Collections;
 
 using static Unity.Mathematics.math;
 
@@ -10,72 +9,112 @@ namespace StrengthInNumber.ProceduralMeshes
     {
         public Bounds Bounds => new Bounds(Vector3.zero, Vector3.one);
 
-        public int VertexCount => 8;
+        public int VertexCount => 24;
 
         public int IndexCount => 36;
 
-        public int JobLength => 1;
+        public int JobLength => 6;
 
         public void Execute<S>(int i, S streams) where S : struct, IMeshStreams
         {
-            // this is only executed only once, thus will handle all vertices at once
-            var positions = new NativeArray<float3>(8, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-            positions[0] = new float3( -0.5f,  -0.5f,  -0.5f);
-            positions[1] = new float3(  0.5f,  -0.5f,  -0.5f);
-            positions[2] = new float3(  0.5f,  -0.5f,   0.5f);
-            positions[3] = new float3( -0.5f,  -0.5f,   0.5f);
-            positions[4] = new float3( -0.5f,   0.5f,  -0.5f);
-            positions[5] = new float3(  0.5f,   0.5f,  -0.5f);
-            positions[6] = new float3(  0.5f,   0.5f,   0.5f);
-            positions[7] = new float3( -0.5f,   0.5f,   0.5f);
-            var tangents = new NativeArray<float4>(4, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-            tangents[0] = new float4(   1.0f, 0.0f,  0.0f, -1.0f);
-            tangents[1] = new float4(   0.0f, 0.0f,  1.0f, -1.0f);
-            tangents[2] = new float4(  -1.0f, 0.0f,  0.0f, -1.0f);
-            tangents[3] = new float4(   0.0f, 0.0f, -1.0f, -1.0f);
-            
-            Vertex vertex = new Vertex();
-
-            int ti = 0;
-
-            // Bottom face
-            streams.SetTriangle(ti++, new int3(0, 1, 3));
-            streams.SetTriangle(ti++, new int3(1, 2, 3));
-
-            // 3 middle faces starting from back face
-            for (int vi = 0; vi < 3; vi++)
+            int vi = i * 4;
+            int ti = i * 2;
+            Sides side = GetSide(i);
+            Vertex vertex = new Vertex()
             {
-                vertex.position = positions[vi];
-                vertex.normal = normalize(positions[vi]);
-                vertex.tangent = tangents[vi];
-                streams.SetVertex(vi, vertex);
+                position = side.position,
+                normal = side.normal,
+                tangent = side.tangent,
+                texCoord0 = float2(0.0f)
+            };
+            float3 bitangent = normalize(cross(vertex.normal, vertex.tangent.xyz));
 
-                vertex.position = positions[vi + 4];
-                vertex.normal = normalize(positions[vi + 4]);
-                streams.SetVertex(vi + 4, vertex);
+            streams.SetVertex(vi, vertex);
 
-                streams.SetTriangle(ti++, new int3(vi + 0, vi + 5, vi + 1));
-                streams.SetTriangle(ti++, new int3(vi + 4, vi + 5, vi + 0));
+
+            vertex.position += vertex.tangent.xyz;
+            vertex.texCoord0.x = 1.0f;
+            streams.SetVertex(vi + 1, vertex);
+
+            vertex.position += -bitangent;
+            vertex.texCoord0.y = 1.0f;
+            streams.SetVertex(vi + 2, vertex);
+
+            vertex.position += -vertex.tangent.xyz;
+            vertex.texCoord0.x = 0.0f;
+            streams.SetVertex(vi + 3, vertex);
+
+
+            streams.SetTriangle(ti, new int3(vi, vi + 3, vi + 1));
+            streams.SetTriangle(ti + 1, new int3(vi + 3, vi + 2, vi + 1));
+        }
+
+        private struct Sides
+        {
+            public float3 position;
+            public float3 normal;
+            public float4 tangent;
+        }
+
+        private Sides GetSide(int i)
+        {
+            switch(i)
+            {
+                case 0:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(-0.5f, -0.5f, 0.5f),
+                        normal = new float3(0.0f,-1.0f, 0.0f),
+                        tangent = new float4(1.0f, 0.0f, 0.0f, -1.0f)
+                    };
+                }
+                case 1:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(-0.5f, -0.5f, -0.5f),
+                        normal = new float3(0.0f, 0.0f, -1.0f),
+                        tangent = new float4(1.0f, 0.0f, 0.0f, -1.0f)
+                    };
+                }
+                case 2:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(0.5f, -0.5f, -0.5f),
+                        normal = new float3(1.0f, 0.0f, 0.0f),
+                        tangent = new float4(0.0f, 0.0f, 1.0f, -1.0f)
+                    };
+                }
+                case 3:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(0.5f, -0.5f, 0.5f),
+                        normal = new float3(0.0f, 0.0f, 1.0f),
+                        tangent = new float4(-1.0f, 0.0f, 0.0f, -1.0f)
+                    };
+                }
+                case 4:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(-0.5f, -0.5f, 0.5f),
+                        normal = new float3(-1.0f, 0.0f, 0.0f),
+                        tangent = new float4(0.0f, 0.0f, -1.0f, -1.0f)
+                    };
+                    }
+                default:
+                {
+                    return new Sides()
+                    {
+                        position = new float3(-0.5f, 0.5f, -0.5f),
+                        normal = new float3(0.0f, 1.0f, 0.0f),
+                        tangent = new float4(1.0f, 0.0f, 0.0f, -1.0f)
+                    };
+                }
             }
-            // 4th middle face
-            vertex.position = positions[3];
-            vertex.normal = normalize(positions[3]);
-            vertex.tangent = tangents[3];
-            streams.SetVertex(3, vertex);
-
-            vertex.position = positions[7];
-            vertex.normal = normalize(positions[7]);
-            streams.SetVertex(7, vertex);
-
-            streams.SetTriangle(ti++, new int3(3, 4, 0));
-            streams.SetTriangle(ti++, new int3(7, 4, 3));
-
-            // Top face
-            streams.SetTriangle(ti++, new int3(4, 6, 5));
-            streams.SetTriangle(ti++, new int3(7, 6, 4));
-
-            positions.Dispose();
-            tangents.Dispose();
         }
     }
 }

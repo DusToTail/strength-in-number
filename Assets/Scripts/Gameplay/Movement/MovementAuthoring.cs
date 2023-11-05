@@ -18,19 +18,10 @@ namespace StrengthInNumber
         }
     }
 
-    public enum Movement_Type
-    {
-        Cube,
-        Pyramid,
-        Sphere
-    }
     public struct Movement_Cube : IComponentData
     {
     }
-    public struct Movement_Pyramid : IComponentData
-    {
-    }
-    public struct Movement_Sphere : IComponentData
+    public struct Movement_Tetrahedron : IComponentData
     {
     }
     public struct Movement_EnabledFlag : IComponentData, IEnableableComponent

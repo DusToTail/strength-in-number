@@ -6,6 +6,9 @@ using System.IO;
 
 namespace StrengthInNumber.ProceduralMeshes
 {
+    /// <summary>
+    /// Unity Editor only
+    /// </summary>
     public static class ProceduralMeshes
     {
         public static Mesh Cube;

@@ -9,39 +9,59 @@ namespace StrengthInNumber
     {
         [Header("EDITOR_ONLY")]
         [SerializeField]
-        private Mesh drawMesh;
+        private Mesh usedMesh;
         [SerializeField]
         private bool drawGizmos;
 
-        private void OnValidate()
+        private void OnValidate() => EditorApplication.update += _OnValidate;
+        /// <summary>
+        /// To prevent unnecessary warnings about SendMessage in Editor Console. More info below
+        /// https://forum.unity.com/threads/sendmessage-cannot-be-called-during-awake-checkconsistency-or-onvalidate-can-we-suppress.537265/
+        /// </summary>
+        private void _OnValidate()
         {
+            EditorApplication.update -= _OnValidate;
+            if (this == null || !EditorUtility.IsDirty(this)) return;
+
             string path = "Assets/" + ProceduralMeshes.ProceduralMeshes.RelativePath;
             switch (shape)
             {
                 case EntityShapeType.Cube:
                     {
-                        drawMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path + "Cube.asset");
+                        usedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path + "Cube.asset");
                         break;
                     }
                 case EntityShapeType.Tetrahedron:
                     {
-                        drawMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path + "Tetrahedron.asset");
+                        usedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path + "Tetrahedron.asset");
                         break;
                     }
                 default:
                     {
-                        drawMesh = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
+                        usedMesh = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
                         break;
                     }
             }
+            SetupMeshUsage(usedMesh);
+        }
+
+        private void SetupMeshUsage(Mesh mesh)
+        {
+            var filter = gameObject.GetComponent<MeshFilter>();
+            if (filter != null)
+                filter.sharedMesh = mesh;
+
+            var col = GetComponent<MeshCollider>();
+            if (col != null)
+                col.sharedMesh = mesh;
         }
 
         private void OnDrawGizmosSelected()
         {
             if (!drawGizmos) { return; }
-            if (drawMesh == null)
+            if (usedMesh == null)
             {
-                Debug.LogWarning("Draw Mesh is null");
+                Debug.LogWarning("Mesh missing for DrawGizmos", this);
                 return;
             }
             Gizmos.color = Color.yellow;
@@ -62,7 +82,7 @@ namespace StrengthInNumber
                     }
             }
 
-            Gizmos.DrawWireMesh(drawMesh, position, Quaternion.identity);
+            Gizmos.DrawWireMesh(usedMesh, position, Quaternion.identity);
         }
     }
 }

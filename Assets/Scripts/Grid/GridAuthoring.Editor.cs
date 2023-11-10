@@ -25,8 +25,6 @@ namespace StrengthInNumber.Grid
             Gizmos.color = Color.yellow;
             GizmosDraw();
         }
-        public abstract float3 GridToWorld(int x, int y, float heightOffset = 0f);
-
         protected abstract void GizmosSetup();
         protected abstract void GizmosDraw();
     }

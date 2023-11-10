@@ -90,7 +90,7 @@ namespace StrengthInNumber.Grid
             // Å£Å•Å£Å•Å£
             // Å•Å£Å•Å£Å•
             // Å£Å•Å£Å•Å£
-            float2 diff = position - Center.xz - new float2((Width + 1) * CellSize * 0.5f, CellHeight * Height) / 2f;
+            float2 diff = position - Center.xz + new float2((Width + 1) * CellSize * 0.5f, CellHeight * Height) / 2f;
             float yFloat = diff.y / CellHeight;
             int y = (int)yFloat;
             float xFloat = diff.x / CellSize;

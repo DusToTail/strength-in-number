@@ -61,7 +61,7 @@ namespace StrengthInNumber.Grid
             // Å°Å°Å°Å°Å°
             // Å°Å°Å°Å°Å°
             // Å°Å°Å°Å°Å°
-            float2 diff = position - Center.xz - new float2(CellSize * Width, CellSize * Height) / 2;
+            float2 diff = position - Center.xz + new float2(CellSize * Width, CellSize * Height) / 2;
             int x = (int)(diff.x / CellSize);
             int y = (int)(diff.y / CellSize);
             if (alwaysInGrid)

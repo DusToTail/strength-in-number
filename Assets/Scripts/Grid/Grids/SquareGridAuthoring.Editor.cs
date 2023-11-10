@@ -17,6 +17,54 @@ namespace StrengthInNumber.Grid
         private bool _drawGizmos;
         private Vector3[] _drawCenters;
 
+        public override float3 GridToWorld(int x, int y, float heightOffset = 0)
+        {
+            float2 offset = new float2(cellSize / 2f) - new float2(width, height) * cellSize / 2f;
+
+            float xPosition = x * cellSize + center.x + offset.x;
+            float yPosition = center.y + heightOffset;
+            float zPosition = y * cellSize + center.z + offset.y;
+            return new float3(xPosition, yPosition, zPosition);
+        }
+        public Vector2Int IndexToGrid(int index)
+        {
+            int y = index / width;
+            int x = index % width;
+            return new Vector2Int(x, y);
+        }
+        // **********************Copy from SquareGridAuthoring.cs (duplicated)************************
+        public int WorldToIndex(float2 position, bool alwaysInGrid)
+        {
+            // For 5x5 (res 5) grid
+            // Å°Å°Å°Å°Å°
+            // Å°Å°Å°Å°Å°
+            // Å°Å°Å°Å°Å°
+            // Å°Å°Å°Å°Å°
+            // Å°Å°Å°Å°Å°
+            float2 diff = position - new float2(center.x, center.z) + new float2(cellSize * width, cellSize * height) / 2;
+            int x = (int)(diff.x / cellSize);
+            int y = (int)(diff.y / cellSize);
+            if (alwaysInGrid)
+            {
+                x = math.clamp(x, 0, width - 1);
+                y = math.clamp(y, 0, height - 1);
+                return y * width + x;
+            }
+
+            if (x < 0 || x > width - 1 ||
+                y < 0 || y > height - 1)
+            {
+                return -1;
+            }
+            return y * width + x;
+        }
+
+        public int GridToIndex(int x, int y)
+        {
+            return y * width + x;
+        }
+        // ************************************************************************
+
         protected override void GizmosDraw()
         {
             for (int y = 0; y < height; y++)
@@ -58,11 +106,8 @@ namespace StrengthInNumber.Grid
             {
                 for (int x = 0; x < width; x++)
                 {
-                    float xPosition = x * cellSize + center.x + offset.x;
-                    float yPosition = center.y;
-                    float zPosition = y * cellSize + center.z + offset.y;
                     int index = y * width + x;
-                    _drawCenters[index] = new Vector3(xPosition, yPosition, zPosition);
+                    _drawCenters[index] = GridToWorld(x, y);
                 }
             }
         }

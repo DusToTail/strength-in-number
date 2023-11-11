@@ -40,7 +40,7 @@ namespace StrengthInNumber.Entities
 
             Vector2Int dir = SquareGridUtils.Directions[direction];
             int2 to = from + new int2(dir.x, dir.y);
-            if(SquareGridUtils.IsOutOfBound(to.x, to.y, squareGrid.width, squareGrid.height))
+            if(SquareGridUtils.IsOutOfBound(to.x, to.y, squareGrid.width, squareGrid.height) && lerp > 0)
             {
                 Debug.LogWarning($"Cant move from {from} to {to} due to out of bound", this);
                 return simulatedPosition;

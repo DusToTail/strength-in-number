@@ -14,7 +14,7 @@ namespace StrengthInNumber.Grid
         {
             GizmosSetup();
         }
-        private void OnDrawGizmosSelected()
+        private void OnDrawGizmos()
         {
             if (!DrawGizmos) { return; }
             if (DrawMesh == null)

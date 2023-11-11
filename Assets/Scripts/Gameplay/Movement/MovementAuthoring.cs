@@ -6,10 +6,6 @@ namespace StrengthInNumber
 {
     public class MovementAuthoring : MonoBehaviour
     {
-        public EntityType type;
-        public EntityShapeType shapeType;
-        public int sizeTier;
-
         public class MovementBaker : Baker<MovementAuthoring>
         {
             public override void Bake(MovementAuthoring authoring)

@@ -14,14 +14,60 @@ namespace StrengthInNumber.Grid
             Left,
             Right
         }
-        public static readonly Dictionary<Faces, Vector2Int> Directions = new Dictionary<Faces, Vector2Int>()
+
+        public static Vector2Int ToVector2Int(Faces face)
         {
-            {Faces.None, Vector2Int.zero },
-            {Faces.Front, Vector2Int.up },
-            {Faces.Back, Vector2Int.down },
-            {Faces.Left, Vector2Int.left },
-            {Faces.Right, Vector2Int.right }
-        };
+            switch(face)
+            {
+                case Faces.Front:
+                    {
+                        return Vector2Int.up;
+                    }
+                case Faces.Back:
+                    {
+                        return Vector2Int.down;
+                    }
+                case Faces.Left:
+                    {
+                        return Vector2Int.left;
+                    }
+                case Faces.Right:
+                    {
+                        return Vector2Int.right;
+                    }
+                default:
+                {
+                    return default;
+                }
+            }
+        }
+
+        public static int2 ToInt2(Faces face)
+        {
+            switch (face)
+            {
+                case Faces.Front:
+                    {
+                        return new int2(0, 1);
+                    }
+                case Faces.Back:
+                    {
+                        return new int2(0, -1);
+                    }
+                case Faces.Left:
+                    {
+                        return new int2(-1, 0);
+                    }
+                case Faces.Right:
+                    {
+                        return new int2(1, 0);
+                    }
+                default:
+                    {
+                        return default;
+                    }
+            }
+        }
 
         public static bool IsOutOfBound(int x, int y, int width, int height)
         {

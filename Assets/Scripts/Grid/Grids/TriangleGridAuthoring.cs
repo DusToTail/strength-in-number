@@ -37,14 +37,15 @@ namespace StrengthInNumber.Grid
 
             public override TriangleGrid CreateGrid()
             {
+                var offset = new float2(authoring.cellSize / 2f, authoring.cellSize * sqrt(3) / 6) -
+                            new float2((authoring.width + 1) * authoring.cellSize * 0.5f, authoring.cellSize * sqrt(3) / 2f * authoring.height) / 2f;
                 var grid = new TriangleGrid()
                 {
                     Width = authoring.width,
                     Height = authoring.height,
                     Center = authoring.center,
                     CellSize = authoring.cellSize,
-                    Offset = new float2(authoring.cellSize / 2f, authoring.cellSize * sqrt(3) / 6) -
-                            new float2((authoring.width + 1) * authoring.cellSize * 0.5f, authoring.cellSize * sqrt(3) / 2f * authoring.height) / 2f
+                    Offset = new float3(offset.x, 0f, offset.y)
                 };
                 return grid;
             }
@@ -64,7 +65,7 @@ namespace StrengthInNumber.Grid
         public int Height { get; set; }
         public float3 Center { get; set; }
         public float CellSize { get; set; }
-        public float2 Offset { get ; set ; }
+        public float3 Offset { get ; set ; }
 
         public float CellHeight { get { return CellSize * sqrt(3) / 2; } }
         public float CenterToVertex { get { return CellSize / sqrt(3); } }
@@ -75,7 +76,7 @@ namespace StrengthInNumber.Grid
             return y * Width + x;
         }
 
-        public int2 WorldToGrid(float2 position, bool alwaysInGrid)
+        public int2 WorldToGrid(float3 position, bool alwaysInGrid)
         {
             // For 5x5 (res 5) grid
             // Å£Å•Å£Å•Å£
@@ -83,8 +84,8 @@ namespace StrengthInNumber.Grid
             // Å£Å•Å£Å•Å£
             // Å•Å£Å•Å£Å•
             // Å£Å•Å£Å•Å£
-            float2 diff =   position - 
-                            (Center.xz + Offset - new float2(CellSize / 2f, CenterToEdge));
+            float2 diff =   position.xz - 
+                            (Center.xz + Offset.xz - new float2(CellSize / 2f, CenterToEdge));
             float yFloat = diff.y / CellHeight;
             int y = (int)yFloat;
             float xFloat = diff.x / CellSize;
@@ -168,12 +169,12 @@ namespace StrengthInNumber.Grid
             return new int2(index / Width, index % Width);
         }
 
-        public float2 GridToWorld(int x, int y)
+        public float3 GridToWorld(int x, int y)
         {
             float xPosition = x * CellSize / 2f + Center.x + Offset.x;
             float zPosition = AlternateHeightSum(y, (x & 1) == 0)
                 + Center.z + Offset.y;
-            return new float2(xPosition, zPosition);
+            return new float3(xPosition, Center.y, zPosition);
         }
 
         
@@ -183,7 +184,7 @@ namespace StrengthInNumber.Grid
             return y * width + x;
         }
 
-        public static int2 WorldToGrid(float2 position, float2 center, float cellSize, int width, int height, bool alwaysInGrid)
+        public static int2 WorldToGrid(float3 position, float3 center, float cellSize, int width, int height, bool alwaysInGrid)
         {
             // For 5x5 (res 5) grid
             // Å£Å•Å£Å•Å£
@@ -195,8 +196,8 @@ namespace StrengthInNumber.Grid
             float cellHeight = cellSize * sqrt(3) / 2;
             float2 offset = new float2(cellSize / 2f, cellSize * sqrt(3) / 6) -
                             new float2((width + 1) * cellSize * 0.5f, cellSize * sqrt(3) / 2f * height) / 2f;
-            float2 diff = position -
-                            (center + offset - new float2(cellSize / 2f, centerToEdge));
+            float2 diff = position.xz -
+                            (center.xz + offset - new float2(cellSize / 2f, centerToEdge));
             float yFloat = diff.y / cellHeight;
             int y = (int)yFloat;
             float xFloat = diff.x / cellSize;
@@ -280,7 +281,7 @@ namespace StrengthInNumber.Grid
             return new int2(index / width, index % width);
         }
 
-        public static float2 GridToWorld(int x, int y, float2 center, float cellSize, int width, int height)
+        public static float3 GridToWorld(int x, int y, float3 center, float cellSize, int width, int height)
         {
             float2 offset = new float2(cellSize / 2f, cellSize * sqrt(3) / 6) -
                 new float2((width + 1) * cellSize * 0.5f, cellSize * sqrt(3) / 2f * height) / 2f;
@@ -289,7 +290,7 @@ namespace StrengthInNumber.Grid
             float centerToVertex = cellSize / sqrt(3);
             float zPosition = AlternateHeightSum(y, centerToEdge, centerToVertex, (x & 1) == 0)
                 + center.y + offset.y;
-            return new float2(xPosition, zPosition);
+            return new float3(xPosition, center.y, zPosition);
         }
 
         public float AlternateHeightSum(int y, bool evenColumn)

@@ -3,17 +3,17 @@ using Unity.Entities;
 
 namespace StrengthInNumber.Grid
 {
-    public interface IGrid : ISharedComponentData
+    public interface IGrid : IComponentData
     {
         int Width { get; set; }
         int Height { get; set; }
         float3 Center { get; set; }
         float CellSize { get; set; }
-        float2 Offset { get; set; }
-        int2 WorldToGrid(float2 position, bool alwaysInGrid);
+        float3 Offset { get; set; }
+        int2 WorldToGrid(float3 position, bool alwaysInGrid);
         int GridToIndex(int x, int y);
         int2 IndexToGrid(int index);
-        float2 GridToWorld(int x, int y);
+        float3 GridToWorld(int x, int y);
     }
 
     public interface IGridElement : IBufferElementData

@@ -58,8 +58,8 @@ namespace StrengthInNumber.Grid
                 for (int x = 0; x < width; x++)
                 {
                     int index = SquareGrid.GridToIndex(x, y, width);
-                    float2 pos = SquareGrid.GridToWorld(x, y, cellSize, new float2(center.x, center.z), width, height);
-                    _drawCenters[index] = new Vector3(pos.x, center.y, pos.y);
+                    float3 pos = SquareGrid.GridToWorld(x, y, cellSize, center, width, height);
+                    _drawCenters[index] = pos;
                 }
             }
         }

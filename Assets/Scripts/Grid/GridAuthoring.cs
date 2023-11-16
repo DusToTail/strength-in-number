@@ -23,7 +23,7 @@ namespace StrengthInNumber.Grid
                 this.authoring = authoring;
                 var self = GetEntity(TransformUsageFlags.WorldSpace);
                 var grid = CreateGrid();
-                AddSharedComponent(self, grid);
+                AddComponent(self, grid);
 
                 var cells = new NativeArray<VBufferElement>(grid.Width * grid.Height, Allocator.Temp);
 

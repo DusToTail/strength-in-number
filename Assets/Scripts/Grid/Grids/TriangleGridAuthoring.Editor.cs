@@ -63,8 +63,8 @@ namespace StrengthInNumber.Grid
                 for (int x = 0; x < width; x++)
                 {
                     int index = TriangleGrid.GridToIndex(x, y, width);
-                    float2 pos = TriangleGrid.GridToWorld(x, y, new float2(center.x, center.z), cellSize, width, height);
-                    _drawCenters[index] = new Vector3(pos.x, center.y, pos.y);
+                    float3 pos = TriangleGrid.GridToWorld(x, y, center, cellSize, width, height);
+                    _drawCenters[index] = pos;
                 }
             }
         }

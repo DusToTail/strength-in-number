@@ -31,14 +31,6 @@ namespace StrengthInNumber
             return (uint)(layer & AllCollisionLayers);
         }
 
-        public static void GetMouseRaycastQuery(EntityManager em, out EntityQuery query)
-        {
-            EntityQueryBuilder builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<MouseRaycast, Input_Mouse_Position>();
-            query = builder.Build(em);
-            builder.Dispose();
-        }
-
         [BurstCompile]
         public struct RaycastJob : IJobParallelFor
         {

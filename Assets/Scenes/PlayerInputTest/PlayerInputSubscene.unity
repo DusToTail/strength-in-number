@@ -382,8 +382,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ed5c71b79d9f4e4f825005a4ab92c11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  setSelectable: 0
-  setHoverable: 0
+  select: 1
+  hover: 1
 --- !u!114 &1848236763
 MonoBehaviour:
   m_ObjectHideFlags: 0

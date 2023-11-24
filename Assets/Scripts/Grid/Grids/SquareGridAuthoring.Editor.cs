@@ -37,8 +37,8 @@ namespace StrengthInNumber.Grid
             {
                             new Vector3(-0.5f, 0f, -0.5f),
                             new Vector3(0.5f, 0f, -0.5f),
+                            new Vector3(-0.5f, 0f, 0.5f),
                             new Vector3(0.5f, 0f, 0.5f),
-                            new Vector3(-0.5f, 0f, 0.5f)
             };
             _drawMesh.normals = new Vector3[]{
                             Vector3.up,
@@ -48,8 +48,8 @@ namespace StrengthInNumber.Grid
                         };
             _drawMesh.triangles = new int[]
             {
-                            0,3,1,
-                            3,2,1
+                            0,2,1,
+                            2,3,1
             };
 
             _drawCenters = new Vector3[width * height];

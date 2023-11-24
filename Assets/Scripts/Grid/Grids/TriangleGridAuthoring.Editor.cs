@@ -53,7 +53,7 @@ namespace StrengthInNumber.Grid
                         };
             _drawMesh.triangles = new int[]
             {
-                            0,1,2,
+                            0,2,1,
             };
 
             _drawCenters = new Vector3[width * height];

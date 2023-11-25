@@ -5,7 +5,7 @@ using Unity.Transforms;
 
 namespace StrengthInNumber.Builder
 {
-    public partial struct BuilderSystem : ISystem
+    public partial struct SpawnSystem : ISystem
     {
         private DynamicBuffer<BuildPrefab> _prefabs;
         private EntityQuery _builderQ;
@@ -35,7 +35,7 @@ namespace StrengthInNumber.Builder
         public void OnUpdate(ref SystemState state)
         {
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            new BuildEntityJob()
+            new SpawnEntityJob()
             {
                 prefabs = _prefabs,
                 ecb = ecb.AsParallelWriter()
@@ -46,7 +46,8 @@ namespace StrengthInNumber.Builder
         }
     }
 
-    partial struct BuildEntityJob : IJobEntity
+    [BurstCompile]
+    partial struct SpawnEntityJob : IJobEntity
     {
         [ReadOnly] public DynamicBuffer<BuildPrefab> prefabs;
         [WriteOnly] public EntityCommandBuffer.ParallelWriter ecb;

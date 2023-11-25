@@ -13,12 +13,14 @@ namespace StrengthInNumber.Builder
             public override void Bake(BuilderAuthoring authoring)
             {
                 var self = GetEntity(TransformUsageFlags.None);
+                AddComponent(self, new Builder() { });
                 var buffer = AddBuffer<BuildPrefab>(self);
 
-                if(authoring.prefabs == null && authoring.prefabs.Length == 0)
+                if(authoring.prefabs == null || authoring.prefabs.Length == 0)
                 {
                     return;
                 }
+
                 for(int i = 0; i < authoring.prefabs.Length; i++)
                 {
                     var prefab = authoring.prefabs[i];
@@ -29,6 +31,13 @@ namespace StrengthInNumber.Builder
                 }
             }
         }
+    }
+
+    public struct Builder : IComponentData
+    {
+        public int prefabIndex;
+        public int faceEnum;
+        public int2 gridPosition;
     }
 
     [InternalBufferCapacity(16)]

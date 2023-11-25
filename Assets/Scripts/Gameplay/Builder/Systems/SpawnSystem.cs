@@ -5,8 +5,11 @@ using Unity.Transforms;
 
 namespace StrengthInNumber.Builder
 {
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateAfter(typeof(BuilderSystem))]
     public partial struct SpawnSystem : ISystem
     {
+        private BufferLookup<BuildPrefab> _prefabsLookup;
         private DynamicBuffer<BuildPrefab> _prefabs;
         private EntityQuery _builderQ;
         private EntityQuery _buildQ;
@@ -26,7 +29,7 @@ namespace StrengthInNumber.Builder
                 _buildQ = builder.Build(ref state);
                 builder.Dispose();
             }
-            state.GetBufferLookup<BuildPrefab>(true).TryGetBuffer(_builderQ.GetSingletonEntity(), out _prefabs);
+            _prefabsLookup = state.GetBufferLookup<BuildPrefab>(true);
             state.RequireForUpdate(_builderQ);
             state.RequireForUpdate(_buildQ);
         }
@@ -34,6 +37,8 @@ namespace StrengthInNumber.Builder
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            _prefabsLookup.Update(ref state);
+            _prefabsLookup.TryGetBuffer(_builderQ.GetSingletonEntity(), out _prefabs);
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             new SpawnEntityJob()
             {

@@ -53,4 +53,8 @@ namespace StrengthInNumber.Builder
         public quaternion rotation;
         public float scale;
     }
+
+    public struct InitilizationTag : IComponentData
+    {
+    }
 }

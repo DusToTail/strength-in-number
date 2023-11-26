@@ -4,7 +4,7 @@ using Unity.Burst;
 using Unity.Mathematics;
 using StrengthInNumber.Grid;
 using StrengthInNumber.Input;
-
+using StrengthInNumber.Entities;
 
 namespace StrengthInNumber.Builder
 {
@@ -115,9 +115,11 @@ namespace StrengthInNumber.Builder
             _mouse = _mouseQ.GetSingletonRW<Mouse>();
             _grid = _gridQ.GetSingletonRW<SquareGrid>();
             // Position selection
-            var raycastOutput = _mouseQ.GetSingletonRW<RaycastOutput>();
-            var position = raycastOutput.ValueRO.hit.Position;
-            _builder.ValueRW.gridPosition = _grid.ValueRO.WorldToGrid(position, true);
+            {
+                var raycastOutput = _mouseQ.GetSingletonRW<RaycastOutput>();
+                var position = raycastOutput.ValueRO.hit.Position;
+                _builder.ValueRW.gridPosition = _grid.ValueRO.WorldToGrid(position, true);
+            }
 
             // Rotation selection
             if (_mouse.ValueRO.scroll > 0)
@@ -139,18 +141,27 @@ namespace StrengthInNumber.Builder
             {
                 _mouse.ValueRW.select = false;
                 var e = state.EntityManager.CreateEntity();
+
+                var prefab = _prefabs[_builder.ValueRO.prefabIndex];
                 quaternion rot = quaternion.identity;
-                if (_builder.ValueRO.faceEnum != 0)
+                float3 position = default;
+
+                if(state.EntityManager.HasComponent<Cube>(prefab.prefab))
                 {
-                    int2 face2D = SquareGridUtils.ToInt2((SquareGridUtils.Faces)_builder.ValueRO.faceEnum);
-                    float3 face3D = math.normalize(new float3(face2D.x, 0f, face2D.y));
-                    rot = quaternion.LookRotation(face3D, new float3(0f, 1f, 0f));
+                    position = _grid.ValueRO.GridToWorld(_builder.ValueRO.gridPosition.x, _builder.ValueRO.gridPosition.y);
+                    position.y +=_grid.ValueRO.CellSize / 2f;
+                    if (_builder.ValueRO.faceEnum != 0)
+                    {
+                        int2 face2D = SquareGridUtils.ToInt2((SquareGridUtils.Faces)_builder.ValueRO.faceEnum);
+                        float3 face3D = math.normalize(new float3(face2D.x, 0f, face2D.y));
+                        rot = quaternion.LookRotation(face3D, new float3(0f, 1f, 0f));
+                    }
                 }
 
                 state.EntityManager.AddComponentData(e, new BuildEntity()
                 {
                     prefabIndex = _builder.ValueRO.prefabIndex,
-                    position = _grid.ValueRO.GridToWorld(_builder.ValueRO.gridPosition.x, _builder.ValueRO.gridPosition.y),
+                    position = position,
                     rotation = rot,
                     scale = 1f
                 });

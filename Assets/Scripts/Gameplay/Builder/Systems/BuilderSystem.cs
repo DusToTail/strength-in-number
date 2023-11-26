@@ -1,7 +1,7 @@
 using Unity.Entities;
 using Unity.Collections;
 using Unity.Burst;
-using Unity.Mathematics;
+using Unity.Transforms;
 using StrengthInNumber.Grid;
 using StrengthInNumber.Input;
 using StrengthInNumber.Entities;
@@ -111,6 +111,15 @@ namespace StrengthInNumber.Builder
                 _builder.ValueRW.prefabIndex++;
                 _builder.ValueRW.prefabIndex %= prefabCount;
             }
+            var prefab = _prefabs[_builder.ValueRO.prefabIndex];
+            if (state.EntityManager.HasComponent<Cube>(prefab.prefab))
+            {
+                _builder.ValueRW.gridType = Builder.GridType.Square;
+            }
+            else
+            {
+                _builder.ValueRW.gridType = Builder.GridType.Triangle;
+            }
 
             _mouse = _mouseQ.GetSingletonRW<Mouse>();
             _grid = _gridQ.GetSingletonRW<SquareGrid>();
@@ -142,28 +151,12 @@ namespace StrengthInNumber.Builder
                 _mouse.ValueRW.select = false;
                 var e = state.EntityManager.CreateEntity();
 
-                var prefab = _prefabs[_builder.ValueRO.prefabIndex];
-                quaternion rot = quaternion.identity;
-                float3 position = default;
-
-                if(state.EntityManager.HasComponent<Cube>(prefab.prefab))
-                {
-                    position = _grid.ValueRO.GridToWorld(_builder.ValueRO.gridPosition.x, _builder.ValueRO.gridPosition.y);
-                    position.y +=_grid.ValueRO.CellSize / 2f;
-                    if (_builder.ValueRO.faceEnum != 0)
-                    {
-                        int2 face2D = SquareGridUtils.ToInt2((SquareGridUtils.Faces)_builder.ValueRO.faceEnum);
-                        float3 face3D = math.normalize(new float3(face2D.x, 0f, face2D.y));
-                        rot = quaternion.LookRotation(face3D, new float3(0f, 1f, 0f));
-                    }
-                }
-
                 state.EntityManager.AddComponentData(e, new BuildEntity()
                 {
                     prefabIndex = _builder.ValueRO.prefabIndex,
-                    position = position,
-                    rotation = rot,
-                    scale = 1f
+                    position = _builder.ValueRO.gridPosition,
+                    faceEnum = _builder.ValueRO.faceEnum,
+                    gridType = _builder.ValueRO.gridType
                 });
             }
         }

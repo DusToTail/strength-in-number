@@ -35,9 +35,15 @@ namespace StrengthInNumber.Builder
 
     public struct Builder : IComponentData
     {
+        public enum GridType
+        {
+            Square,
+            Triangle
+        }
         public int prefabIndex;
         public int faceEnum;
         public int2 gridPosition;
+        public GridType gridType;
     }
 
     [InternalBufferCapacity(16)]
@@ -49,9 +55,9 @@ namespace StrengthInNumber.Builder
     public struct BuildEntity : IComponentData
     {
         public int prefabIndex;
-        public float3 position;
-        public quaternion rotation;
-        public float scale;
+        public int2 position;
+        public int faceEnum;
+        public Builder.GridType gridType;
     }
 
     public struct InitilizationTag : IComponentData

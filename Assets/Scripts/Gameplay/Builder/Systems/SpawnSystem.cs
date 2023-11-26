@@ -1,6 +1,7 @@
 using Unity.Entities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 using Unity.Burst;
 using Unity.Transforms;
 using StrengthInNumber.Gameplay;
@@ -10,7 +11,7 @@ using StrengthInNumber.Entities;
 namespace StrengthInNumber.Builder
 {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(BuilderSystem))]
+    [UpdateBefore(typeof(TransformSystemGroup))]
     public partial struct SpawnSystem : ISystem
     {
         private BufferLookup<BuildPrefab> _prefabsLookup;
@@ -41,7 +42,8 @@ namespace StrengthInNumber.Builder
             }
             {
                 var builder = new EntityQueryBuilder(Allocator.Temp)
-                    .WithAll<InitilizationTag>();
+                    .WithAll<InitilizationTag>()
+                    .WithOptions(EntityQueryOptions.IncludeDisabledEntities);
                 _initializeQ = builder.Build(ref state);
                 builder.Dispose();
             }
@@ -64,12 +66,15 @@ namespace StrengthInNumber.Builder
         {
             _prefabsLookup.Update(ref state);
             _prefabsLookup.TryGetBuffer(_builderQ.GetSingletonEntity(), out _prefabs);
+            _gridPositionLookup.Update(ref state);
+            var squareGrid = _gridQ.GetSingletonRW<SquareGrid>();
 
             {
                 var ecb = new EntityCommandBuffer(Allocator.TempJob);
                 new SpawnJob()
                 {
                     prefabs = _prefabs,
+                    squareGrid = (RefRO<SquareGrid>)squareGrid,
                     ecb = ecb.AsParallelWriter(),
                 }.ScheduleParallel(_buildQ, state.Dependency).Complete();
                 ecb.DestroyEntity(_buildQ, EntityQueryCaptureMode.AtPlayback);
@@ -79,8 +84,6 @@ namespace StrengthInNumber.Builder
 
             _movementLookup.Update(ref state);
             _transformLookup.Update(ref state);
-            _gridPositionLookup.Update(ref state);
-            var grid = _gridQ.GetSingletonRW<SquareGrid>();
 
             {
                 var ecb = new EntityCommandBuffer(Allocator.TempJob);
@@ -88,8 +91,6 @@ namespace StrengthInNumber.Builder
                 {
                     movementLookup = _movementLookup,
                     transformLookup = _transformLookup,
-                    gridPositionLookup = _gridPositionLookup,
-                    grid = (RefRO<SquareGrid>)grid,
                     ecb = ecb.AsParallelWriter()
                 }.ScheduleParallel(_initializeQ, state.Dependency).Complete();
                 ecb.RemoveComponent<InitilizationTag>(_initializeQ, EntityQueryCaptureMode.AtPlayback);
@@ -103,6 +104,8 @@ namespace StrengthInNumber.Builder
     [BurstCompile]
     partial struct SpawnJob : IJobEntity
     {
+        [NativeDisableUnsafePtrRestriction]
+        public RefRO<SquareGrid> squareGrid;
         [ReadOnly] public DynamicBuffer<BuildPrefab> prefabs;
         [WriteOnly] public EntityCommandBuffer.ParallelWriter ecb;
 
@@ -110,8 +113,30 @@ namespace StrengthInNumber.Builder
         public void Execute([ChunkIndexInQuery] int sortKey, in BuildEntity build)
         {
             var e = ecb.Instantiate(sortKey, prefabs[build.prefabIndex].prefab);
-            ecb.SetComponent(sortKey, e, LocalTransform.FromPositionRotationScale(build.position, build.rotation, build.scale));
-            
+            ecb.SetEnabled(sortKey, e, false);
+
+            ecb.SetComponent(sortKey, e, new GridPosition()
+            {
+                position = build.position
+            });
+            float3 position = default;
+            quaternion rotation = quaternion.identity;
+
+            if(build.gridType == Builder.GridType.Square)
+            {
+                position = squareGrid.ValueRO.GridToWorld(build.position.x, build.position.y);
+                position.y += squareGrid.ValueRO.CellSize / 2f;
+
+                if(build.faceEnum != 0)
+                {
+                    var face = (SquareGridUtils.Faces)build.faceEnum;
+                    var dirInt2 = SquareGridUtils.ToInt2(face);
+                    float3 dir = new float3(dirInt2.x, 0f, dirInt2.y);
+                    rotation = quaternion.LookRotation(dir, new float3(0f, 1f, 0f));
+                }
+            }
+
+            ecb.SetComponent(sortKey, e, LocalTransform.FromPositionRotation(position, rotation));
             ecb.AddComponent(sortKey, e, new InitilizationTag());
         }
     }
@@ -119,10 +144,7 @@ namespace StrengthInNumber.Builder
     [BurstCompile]
     partial struct InitializeJob : IJobEntity
     {
-        [NativeDisableUnsafePtrRestriction]
-        public RefRO<SquareGrid> grid;
         [ReadOnly] public ComponentLookup<LocalTransform> transformLookup;
-        [ReadOnly] public ComponentLookup<GridPosition> gridPositionLookup;
         [ReadOnly] public ComponentLookup<Movement> movementLookup;
         [WriteOnly] public EntityCommandBuffer.ParallelWriter ecb;
 
@@ -131,13 +153,6 @@ namespace StrengthInNumber.Builder
         {
             var transform = transformLookup.GetRefRO(e).ValueRO;
 
-            if (gridPositionLookup.HasComponent(e))
-            {
-                ecb.SetComponent(sortKey, e, new GridPosition()
-                {
-                    position = grid.ValueRO.WorldToGrid(transform.Position, true)
-                });
-            }
             if (movementLookup.HasComponent(e))
             {
                 var movement = movementLookup.GetRefRO(e).ValueRO;
@@ -150,6 +165,7 @@ namespace StrengthInNumber.Builder
                     speed = movement.speed
                 });
             }
+            ecb.SetEnabled(sortKey, e, true);
         }
     }
 }
